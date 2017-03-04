@@ -1,0 +1,82 @@
+Assignment 4.1:
+
+Sales of different TV Task 1:
+Write a MapReduce program to filter out the invalid recor
+ds. The 
+output of this program will act as input for subsequent tasks. Map only job will fit for this 
+context. 
+
+Solution
+
+
+I have created map only program with only mapper class and setting the reducers to 0.
+As required I have set the output as SequenceFileOutputFormat.
+I have attached the part-m-00000 which is non executable as it is sequence output.
+
+Programs:
+Tv41.java
+package mapreduce.demo.tv41;
+
+import org.apache.hadoop.fs.Path; 
+import org.apache.hadoop.conf.*;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
+import org.apache.hadoop.io.IntWritable;
+
+public class Tv41 {
+	@SuppressWarnings("deprecation")
+	public static void main(String[] args) throws Exception {
+		Configuration conf = new Configuration();
+		Job job = new Job(conf, "DemoTask1");
+		job.setJarByClass(Tv41.class);
+
+		job.setMapOutputKeyClass(IntWritable.class);
+		job.setMapOutputValueClass(IntWritable.class);
+
+		job.setOutputKeyClass(IntWritable.class);
+		job.setOutputValueClass(IntWritable.class);
+		job.setMapperClass(Tv41Mapper.class);
+		//job.setReducerClass(Tv41Reducer.class);
+		job.setNumReduceTasks(0);
+		job.setInputFormatClass(TextInputFormat.class);
+		job.setOutputFormatClass(SequenceFileOutputFormat.class);
+
+		FileInputFormat.addInputPath(job, new Path(args[0])); 
+		FileOutputFormat.setOutputPath(job,new Path(args[1]));
+		
+		/*
+		Path out=new Path(args[1]);
+		out.getFileSystem(conf).delete(out);
+		*/
+		
+		job.waitForCompletion(true);
+	}
+}
+
+
+Tv41Mapper.java
+
+package mapreduce.demo.tv41;
+
+import java.io.IOException;
+
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.*; 
+
+public class Tv41Mapper extends Mapper<LongWritable, Text, LongWritable, Text> {
+	public void map(LongWritable key, Text value, Context context) 
+			throws IOException, InterruptedException {
+		String[] str = value.toString().split("|");
+		String cname = str[0];
+		String pname = str[1];
+		if((cname.equals("NA")) || (pname.equals("Na"))){
+		context.write(key, value);
+		}
+	}
+}
+
+
